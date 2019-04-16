@@ -13,8 +13,8 @@ data Experimento = Experimento
   , criterioDeExito :: Animal -> Bool
   } deriving (Show)
 
-
 -- ANIMALES
+
 pinky = Animal {ci = 172, especie = "raton", capacidades = ["pinkyhablar", "pinkycomer", "destruir el mundo", "hacer planes desalmados"]}
 
 cerebro = Animal {ci = 180, especie = "raton", capacidades = ["hablar","destruir el mundo","pensar"]}
@@ -30,6 +30,7 @@ dini = Animal {ci = 1750, especie = "semi-dios", capacidades = cycle["ganar", "s
 experimento1 = Experimento {transformacion = pinkyficar, transformacion2 = inteligenciaSuperior 10, criterioDeExito = antropomorfico }
 experimento2 = Experimento {transformacion = superpoderes, transformacion2 = inteligenciaSuperior 10, criterioDeExito = antropomorfico }
 experimento3 = Experimento {transformacion = inteligenciaSuperior 20, transformacion2 = inteligenciaSuperior 10, criterioDeExito = noTanCuerdo }
+
 --PUNTO 2
 
 inteligenciaSuperior :: Integer -> Animal -> Animal
@@ -46,7 +47,6 @@ superpoderes animal
  
 agregarCapacidad :: Animal -> String -> Animal  
 agregarCapacidad animal capacidad = animal {capacidades = (capacidad : (capacidades animal)) }
-
 
 --PUNTO 3
 
@@ -68,6 +68,7 @@ experimentoExitoso :: Experimento -> Animal -> Bool
 experimentoExitoso experimento =  (criterioDeExito experimento) . (transformacion2 experimento) . (transformacion experimento)
 
 --PUNTO 5
+
 reporte1 :: [Animal] -> Experimento -> [Integer]
 reporte1 animales experimento = map ci (animalesExitosos animales experimento)
 
