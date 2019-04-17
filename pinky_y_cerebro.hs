@@ -4,18 +4,26 @@ import           Text.Show.Functions
 data Animal = Animal
   { ci :: Integer
   , especie :: String
-  , capacidades :: [String]
+  , capacidades :: [Capacidad]
   } deriving (Show, Eq)
 
 data Experimento = Experimento
-  { transformacion :: Animal -> Animal
-  , transformacion2 :: Animal -> Animal
-  , criterioDeExito :: Animal -> Bool
+  { transformacion :: Transformacion
+  , transformacion2 :: Transformacion
+  , criterioDeExito :: CriterioExito
   } deriving (Show)
+
+--Types
+
+type Capacidad = String
+
+type Transformacion = Animal -> Animal
+
+type CriterioExito = Animal -> Bool
 
 -- ANIMALES
 
-pinky = Animal {ci = 172, especie = "raton", capacidades = ["pinkyhablar", "pinkycomer", "destruir el mundo", "hacer planes desalmados"]}
+pinki = Animal {ci = 172, especie = "raton", capacidades = ["pinkihablar", "pinkicomer", "pinkipensar", "destruir el mundo", "hacer planes desalmados"]}
 
 cerebro = Animal {ci = 180, especie = "raton", capacidades = ["hablar","destruir el mundo","pensar"]}
 
@@ -23,64 +31,93 @@ cavallo = Animal {ci = 500, especie = "economista", capacidades = [ "mega devalu
 
 menem = Animal {ci = 1400, especie = "diablo", capacidades = ["seducir al pueblo", "ganar 2 elecciones", "vender un pais"]}
 
-dini = Animal {ci = 1750, especie = "semi-dios", capacidades = cycle["ganar", "ser el mejor en todo", "programar"]}
+dini = Animal {ci = 1750, especie = "semi-dios", capacidades = repeat "pinkisoy"}
 
 -- EXPERIMENTOS
 
-experimento1 = Experimento {transformacion = pinkyficar, transformacion2 = inteligenciaSuperior 10, criterioDeExito = antropomorfico }
+experimento1 = Experimento {transformacion = pinkificar, transformacion2 = inteligenciaSuperior 10, criterioDeExito = antropomorfico }
 experimento2 = Experimento {transformacion = superpoderes, transformacion2 = inteligenciaSuperior 10, criterioDeExito = antropomorfico }
 experimento3 = Experimento {transformacion = inteligenciaSuperior 20, transformacion2 = inteligenciaSuperior 10, criterioDeExito = noTanCuerdo }
 
 --PUNTO 2
 
-inteligenciaSuperior :: Integer -> Animal -> Animal
+inteligenciaSuperior :: Integer -> Transformacion
 inteligenciaSuperior incremento animal  = animal { ci = (ci animal) + incremento }
 
-pinkyficar :: Animal -> Animal
-pinkyficar animal = animal {capacidades = []}
+pinkificar :: Transformacion
+pinkificar animal = animal {capacidades = []}
 
-superpoderes :: Animal -> Animal
+superpoderes :: Transformacion
 superpoderes animal 
-    | (especie animal) == "elefante" = agregarCapacidad animal "no tenerle miedo a los ratones"
-    | (especie animal) == "raton" && (ci animal) > 100 = agregarCapacidad animal "hablar"
+    | esDeEspecie "elefante" animal = agregarCapacidad "no tenerle miedo a los ratones" animal
+    | esDeEspecie "raton" animal && (ci animal) > 100 = agregarCapacidad "hablar" animal 
     | otherwise = animal
- 
-agregarCapacidad :: Animal -> String -> Animal  
-agregarCapacidad animal capacidad = animal {capacidades = (capacidad : (capacidades animal)) }
+
+esDeEspecie :: String -> Animal -> Bool    
+esDeEspecie unaEspecie animal = unaEspecie == (especie animal) 
+
+agregarCapacidad :: Capacidad -> Transformacion  
+agregarCapacidad capacidad animal  = animal {capacidades = (capacidad : (capacidades animal)) }
 
 --PUNTO 3
 
-antropomorfico :: Animal -> Bool
-antropomorfico animal = tieneCapacidad animal "hablar" && (ci animal) > 180
+antropomorfico :: CriterioExito
+antropomorfico animal = tieneCapacidad "hablar" animal  && (ci animal) > 60
 
-tieneCapacidad :: Animal -> String -> Bool
-tieneCapacidad animal capacidad = any (==capacidad) (capacidades animal)
+tieneCapacidad :: Capacidad -> CriterioExito
+tieneCapacidad capacidad animal  = elem capacidad (capacidades animal)
 
-noTanCuerdo :: Animal -> Bool
-noTanCuerdo animal =  length (filter (comienzaCon "pinky") (capacidades animal)) > 1
+noTanCuerdo :: CriterioExito
+noTanCuerdo =  (tieneMasQue 2) . (capacidadesPinkieskas) 
 
-comienzaCon :: String -> String -> Bool
-comienzaCon palabra capacidad = (fst (splitAt (length palabra) capacidad)) == palabra
+capacidadesPinkieskas :: Animal -> [Capacidad]
+capacidadesPinkieskas animal = filter (comienzaCon "pinki") (capacidades animal)
+
+tieneMasQue :: Int -> [Capacidad] -> Bool
+tieneMasQue cantidad capacidades = (length capacidades) > cantidad
+
+comienzaCon :: String -> Capacidad -> Bool
+comienzaCon palabra capacidad = (partirCapacidad palabra capacidad) == palabra
+
+partirCapacidad :: String -> Capacidad -> Capacidad
+partirCapacidad palabra capacidad = take (length palabra) capacidad
 
 --PUNTO 4
 
-experimentoExitoso :: Experimento -> Animal -> Bool
+experimentoExitoso :: Experimento -> CriterioExito
 experimentoExitoso experimento =  (criterioDeExito experimento) . (transformacion2 experimento) . (transformacion experimento)
 
 --PUNTO 5
 
-reporte1 :: [Animal] -> Experimento -> [Integer]
-reporte1 animales experimento = map ci (animalesExitosos animales experimento)
+coeficienteAnimalesExitosos :: [Animal] -> Experimento -> [Integer]
+coeficienteAnimalesExitosos animales experimento = map ci (animalesExitosos animales experimento)
 
 animalesExitosos :: [Animal] -> Experimento -> [Animal]
 animalesExitosos animales experimento = filter (experimentoExitoso experimento) animales
 
-reporte2 :: [Animal] -> Experimento -> [String]
-reporte2 animales experimento =  map especie (genericTake (obtenerMitad (animalesExitosos animales experimento))  (animalesExitosos animales experimento))
+especiePrimerMitadAnimalesExitosos :: [Animal] -> Experimento -> [String]
+especiePrimerMitadAnimalesExitosos animales =  obtenerEspecies . obtenerMitad . (animalesExitosos animales) 
 
-obtenerMitad :: [Animal] -> Integer
-obtenerMitad animales = round ((genericLength animales)  / 2.0)
+obtenerEspecies :: [Animal] -> [String]
+obtenerEspecies animales = map especie animales
 
-reporte3 :: [Animal] -> Experimento -> [Int]
-reporte3 animales experimento = map length (map (capacidades) (filter ((=="raton").especie)(animalesExitosos animales experimento)))
+obtenerMitad :: [Animal] -> [Animal]
+obtenerMitad animales = take (calcularMitad animales) animales
 
+calcularMitad :: [Animal] -> Int
+calcularMitad animales = (length animales) `div` 2
+
+capacidadesAnimalesExitososYRatones :: [Animal] -> Experimento -> [Int]
+capacidadesAnimalesExitososYRatones animales = listaSumaCapacidades . obtenerCapacidades . (animalesExitososYRatones animales)
+
+obtenerCapacidades :: [Animal] -> [[Capacidad]]
+obtenerCapacidades animales = map capacidades animales
+
+listaSumaCapacidades :: [[Capacidad]] -> [Int]
+listaSumaCapacidades capacidades = map length capacidades
+
+animalesExitososYRatones :: [Animal] -> Experimento -> [Animal]
+animalesExitososYRatones animales experimento = filter (esExitosoYRaton experimento) (animales)
+
+esExitosoYRaton :: Experimento -> Animal -> Bool
+esExitosoYRaton experimento animal =  (experimentoExitoso experimento animal) && (esDeEspecie "raton" animal)
